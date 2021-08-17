@@ -1,8 +1,5 @@
 import gurobipy
 
-from coding.Preprocess.config import data_save_dir
-
-
 from coding.utils import GraphAndCostLoader
 
 
@@ -16,8 +13,10 @@ beta = {i: "D1" if i in range(1, 11) else "D2" for i in range(1, 21)}
 w = {"A": 20 / 60, "B": 15 / 60}
 I = range(1, 21)
 J = [point for point in A_cost_matrix.index if point.startswith("F")]
-K = [point for point in A_cost_matrix.index if point.startswith("Z")]
-
+# K = [point for point in A_cost_matrix.index if point.startswith("Z")]
+K = [point for point in A_cost_matrix.index if point.startswith("Z") ]
+K.append('J21')
+K.append('J18')
 # %% 2. Gurobi 求解
 MODEL = gurobipy.Model()
 
