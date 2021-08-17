@@ -1,7 +1,9 @@
+import copy
 import os
 
 import gurobipy
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from coding.Preprocess.config import data_save_dir
 
@@ -9,6 +11,8 @@ from coding.Preprocess.costing import A_graph, B_graph
 
 # %% 1. 数据准备
 # 导入文件
+from coding.draw_utils import PlotGraph, PlotPath
+
 readData = lambda path: pd.read_csv(path, index_col=0)
 joinPath = lambda filename: os.path.join(data_save_dir, 'table', filename)
 
@@ -95,13 +99,28 @@ MODEL.optimize()
 # 输出结果
 print(f"任务完成用时：{round(t_max.x, 2)} h")
 print(f"平均用时：{round(t.sum().getValue() / 20, 2)} h")
+plt.figure()
+PlotGraph()
 for i in I:
     for j in J:
         for k in K:
             if x[i, j, k].x:
                 path1 = graph[alpha[i]].shortest_paths_Solve(beta[i], j, show=False)[0][0][:-1]
                 path2 = graph[alpha[i]].shortest_paths_Solve(j, k, show=False)[0][0]
+
+                print_path1 = copy.deepcopy(path1)
+                print_path2 = copy.deepcopy(path2)
+
                 path2[0] = path2[0] + "(作业点)"
                 path2[-1] = path2[-1] + "(补水点)"
+                # print(path2)
                 points = path1 + path2
-                print(f"编号：{alpha[i]}-{i}t用时：{round(t[i].x, 2)}ht路线：{' -> '.join(points)}")
+                print_points = []
+                # print_points.append(print_path1)
+                # print_points.append(print_path2)
+                # print(print_points)
+                print(f"编号：{alpha[i]}-{i}用时：{round(t[i].x, 2)}ht路线：{' -> '.join(points)}")
+
+                # PlotPath(print_points, label=f"{alpha[i]}-{[i]}")
+plt.show()
+

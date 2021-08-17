@@ -1,12 +1,21 @@
+import os
+
 import gurobipy
 import pandas as pd
 
-from cost_matrix import A_graph, B_graph
+from coding.Preprocess.config import data_save_dir
+from coding.Preprocess.costing import A_graph, B_graph
 
 # %% 1. 数据准备
 # 导入文件
-A_cost_matrix = pd.read_excel("../table/A 车代价矩阵.xlsx", index_col=0)
-B_cost_matrix = pd.read_excel("../table/B 车代价矩阵.xlsx", index_col=0)
+readData = lambda path: pd.read_csv(path, index_col=0)
+joinPath = lambda filename: os.path.join(data_save_dir, 'table', filename)
+
+path = joinPath('Acar_costMatrix.csv')
+A_cost_matrix = readData(path)
+path = joinPath('Bcar_costMatrix.csv')
+
+B_cost_matrix = readData(path)
 
 # 初始化映射表
 cost_matrix = {"A": A_cost_matrix, "B": B_cost_matrix}
@@ -80,12 +89,12 @@ for i in I:
                 for j2 in J:
                     for k2 in K:
                         if x_2[i, k1, j2, k2].x:
-                            path1 = graph[alpha[i]].shortest_paths(beta[i], j1, show=False)[0][0][:-1]
-                            path2 = graph[alpha[i]].shortest_paths(j1, k1, show=False)[0][0][:-1]
+                            path1 = graph[alpha[i]].shortest_paths_Solve(beta[i], j1, show=False)[0][0][:-1]
+                            path2 = graph[alpha[i]].shortest_paths_Solve(j1, k1, show=False)[0][0][:-1]
                             path2[0] = path2[0] + "(作业点 1)"
-                            path3 = graph[alpha[i]].shortest_paths(k1, j2, show=False)[0][0][:-1]
+                            path3 = graph[alpha[i]].shortest_paths_Solve(k1, j2, show=False)[0][0][:-1]
                             path3[0] = path3[0] + "(补水点 1)"
-                            path4 = graph[alpha[i]].shortest_paths(j2, k2, show=False)[0][0]
+                            path4 = graph[alpha[i]].shortest_paths_Solve(j2, k2, show=False)[0][0]
                             path4[0] = path4[0] + "(作业点 2)"
                             path4[-1] = path4[-1] + "(补水点 2)"
                             points = path1 + path2 + path3 + path4

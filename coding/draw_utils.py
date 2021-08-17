@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 
+from coding.utils import getLocation
+
 
 def plot_centroids(centroids, weights=None, circle_color='w', cross_color='k'):
     if weights is not None:
@@ -43,3 +45,39 @@ def plot_gaussian_mixture(clusterer, X, resolution=1000, show_ylabels=True):
         plt.ylabel("$x_2$", fontsize=14, rotation=0)
     else:
         plt.tick_params(labelleft=False)
+
+
+
+
+def PlotGraph():
+
+    X_DataFrame = getLocation()
+    # X_DataFrame
+    X_train = X_DataFrame.values
+
+
+    # y_pred = class_assign[:, 0]
+    # print('y', y_pred)
+    # print(center.shape)
+    # y_pred = np.asarray(y_pred)
+    # for i in range(k):
+    #     y_pred = np._r[y_pred, class_assign[i,0]]
+
+    plt.scatter(X_train[:, 0], X_train[:, 1],  cmap='coolwarm')
+
+
+def PlotPath(path, label):
+    # get location
+    X_DataFrame = getLocation()
+    # X_DataFrame
+    paths = [0] * len(path)
+    for i, points in enumerate(path):
+        for point in points:
+            print('point', point)
+            for idx, index in enumerate(X_DataFrame.index):
+                if index == point:
+                    print(index, point)
+                    # paths = np.r_[paths, [X_DataFrame.iloc[idx, :]]]
+
+    print(paths)
+    plt.plot(paths, label=label)

@@ -1,12 +1,19 @@
+import os
+
 import gurobipy
 import pandas as pd
 
+from coding.Preprocess.config import data_save_dir
 from coding.Preprocess.costing import A_graph, B_graph
 
-# %% 1. 数据准备
-# 导入文件
-A_cost_matrix = pd.read_excel("../table/A 车代价矩阵.xlsx", index_col=0)
-B_cost_matrix = pd.read_excel("../table/B 车代价矩阵.xlsx", index_col=0)
+readData = lambda path: pd.read_csv(path, index_col=0)
+joinPath = lambda filename: os.path.join(data_save_dir, 'table', filename)
+
+path = joinPath('Acar_costMatrix.csv')
+A_cost_matrix = readData(path)
+path = joinPath('Bcar_costMatrix.csv')
+
+B_cost_matrix = readData(path)
 
 # 初始化映射表
 cost_matrix = {"A": A_cost_matrix, "B": B_cost_matrix}
