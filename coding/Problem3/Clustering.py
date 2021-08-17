@@ -18,7 +18,7 @@ def getFixedPoints():
     return centers
 
 
-from coding.Problem3.KMeansImpl import KMeans
+from coding.Problem3.KMeansImpl import KMeans, biKmeans, PickNewPoint
 
 plt.figure()
 X_DataFrame = getLocation()
@@ -28,7 +28,7 @@ X_train = X_DataFrame.values
 k = 8
 # clf = KMeans(n_clusters=k)
 fixed_centroids = getFixedPoints()
-clf = KMeans(k=k, fixed_centroids=fixed_centroids)
+clf = KMeans(k=k, itertimes=2000,fixed_centroids=fixed_centroids)
 
 centroids, class_assign = clf.fit(dataSet=X_train)
 # clf.fit(X_train)
@@ -96,10 +96,14 @@ def plot_givenPoint():
     plot_data_with_text(BuGiPoint.values)
 
 
-# plot_decision_boundaries(clf, X_train)
+
+new2_center_name = PickNewPoint(clf.centroids)
+
+print(new2_center_name)
+# # plot_decision_boundaries(clf, X_train)
 plot_givenPoint()
 centroids = np.asarray(centroids)
-
-plot_centroids(centroids=centroids)
+#
+plot_centroids(centroids)
 # plot_centroids(clf.cluster_centers_)
 plt.show()

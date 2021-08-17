@@ -3,9 +3,13 @@ Created on Feb 16, 2011
 k Means Clustering for Ch10 of Machine Learning in Action
 @author: Peter Harrington
 '''
+import copy
+
 from numpy import *
 
 import numpy as np
+
+from coding.utils import getLocation, getJpointLocation
 
 
 def loadDataSet(fileName):  # general function to parse tab -delimited floats
@@ -22,13 +26,15 @@ def distEclud(vecA, vecB):
     return sqrt(sum(power(vecA - vecB, 2)))  # la.norm(vecA-vecB)
 
 
-def randCent(dataSet, k):
-    n = shape(dataSet)[1]
-    centroids = mat(zeros((k, n)))  # create centroid mat
-    for j in range(n):  # create random cluster centers, within bounds of each dimension
-        minJ = min(dataSet[:, j])
-        rangeJ = float(max(dataSet[:, j]) - minJ)
-        centroids[:, j] = mat(minJ + rangeJ * random.rand(k, 1))
+def randCent(X, k):
+    n = shape(X)[1]
+    # print(X)
+    centroids = np.mat(np.zeros((k, n)))  # create centroid mat
+    for j in np.arange(n):  # create random cluster centers, within bounds of each dimension
+        minJ = np.min(X[:, j])
+        print(minJ)
+        rangeJ = float(np.max(X[:, j]) - minJ)
+        centroids[:, j] = np.mat(minJ + rangeJ * np.random.rand(k, 1))
     return centroids
 
 
@@ -43,11 +49,13 @@ class KMeans(object):
     def fit(self, dataSet):
         m = shape(dataSet)[0]
         self.distMeas = distEclud
+
         clusterAssment = mat(zeros((m, 2)))  # create mat to assign data points
         # to a centroid, also holds SE of each point
         self.centroids = self.createCent(dataSet, self.k)
         self.clusterChanged = True
         i = 0
+        print('--------start iter---------')
         while self.clusterChanged and i < self.itertimes:
             self.clusterChanged = False
             clusterAssment = self.predict(dataSet)
@@ -62,16 +70,18 @@ class KMeans(object):
             #     if self.clusterAssment[i, 0] != minIndex:
             #         clusterChanged = True
             #     self.clusterAssment[i, :] = minIndex, minDist ** 2
-            print(self.centroids)
+            # print(self.centroids)
             for cent in range(self.k):  # recalculate centroids
                 ptsInClust = dataSet[nonzero(clusterAssment[:, 0].A == cent)[0]]  # get all the point in this cluster
                 # centroids[cent, :] = mean(ptsInClust, axis=0)  # assign centroid to mean
-                if cent >= 6:
-                    self.centroids[cent, :] = mean(ptsInClust, axis=0)
-                else:
-                    scaler = 10
-                    self.centroids[cent, :] = mean(ptsInClust, axis=0) + 0.02 * self.fixed_centroids[cent, :] + scaler * np.random.normal(0,1,size=(2))
+
+                self.centroids[cent, :] = np.mean(ptsInClust, axis=0)
+                # print(self.fixed_centroids)
+                if cent < 6:
+                    scaler = 1
+                    self.centroids[cent, :] = self.fixed_centroids[cent, :]
             i += 1
+        print('--------end iter---------')
         return self.centroids, clusterAssment
 
     def predict(self, X):
@@ -83,7 +93,7 @@ class KMeans(object):
             minIndex = -1
             for j in range(self.k):
                 distJI = self.distMeas(self.centroids[j, :], X[i, :])
-                if distJI < minDist and self.centroids[j, 0].shape <= 8:
+                if distJI < minDist and self.centroids.shape[0] <= 8:
                     minDist = distJI
                     minIndex = j
 
@@ -95,36 +105,47 @@ class KMeans(object):
         return clusterAssment
 
 
-def biKmeans(dataSet, k, distMeas=distEclud):
-    m = shape(dataSet)[0]
-    clusterAssment = mat(zeros((m, 2)))
-    centroid0 = mean(dataSet, axis=0).tolist()[0]
-    centList = [centroid0]  # create a list with one centroid
-    for j in range(m):  # calc initial Error
-        clusterAssment[j, 1] = distMeas(mat(centroid0), dataSet[j, :]) ** 2
-    while (len(centList) < k):
-        lowestSSE = inf
-        for i in range(len(centList)):
-            ptsInCurrCluster = dataSet[nonzero(clusterAssment[:, 0].A == i)[0],
-                               :]  # get the data points currently in cluster i
-            centroidMat, splitClustAss = kMeans(ptsInCurrCluster, 2, distMeas)
-            sseSplit = sum(splitClustAss[:, 1])  # compare the SSE to the currrent minimum
-            sseNotSplit = sum(clusterAssment[nonzero(clusterAssment[:, 0].A != i)[0], 1])
-            print("sseSplit, and notSplit: ", sseSplit, sseNotSplit)
-            if (sseSplit + sseNotSplit) < lowestSSE:
-                bestCentToSplit = i
-                bestNewCents = centroidMat
-                bestClustAss = splitClustAss.copy()
-                lowestSSE = sseSplit + sseNotSplit
-        bestClustAss[nonzero(bestClustAss[:, 0].A == 1)[0], 0] = len(centList)  # change 1 to 3,4, or whatever
-        bestClustAss[nonzero(bestClustAss[:, 0].A == 0)[0], 0] = bestCentToSplit
-        print('the bestCentToSplit is: ', bestCentToSplit)
-        print('the len of bestClustAss is: ', len(bestClustAss))
-        centList[bestCentToSplit] = bestNewCents[0, :].tolist()[0]  # replace a centroid with two best centroids
-        centList.append(bestNewCents[1, :].tolist()[0])
-        clusterAssment[nonzero(clusterAssment[:, 0].A == bestCentToSplit)[0],
-        :] = bestClustAss  # reassign new clusters, and SSE
-    return mat(centList), clusterAssment
+class biKmeans(KMeans):
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def fit(self, dataSet):
+        m = shape(dataSet)[0]
+        clusterAssment = np.mat(zeros((m, 2)))
+        centroid0 = np.mean(dataSet, axis=0).tolist()[0]
+        self.centroids = [centroid0]  # create a list with one centroid
+        for j in range(m):  # calc initial Error
+            clusterAssment[j, 1] = self.distMeas(mat(centroid0), dataSet[j, :]) ** 2
+        while (len(self.centroids) < self.k):
+            lowestSSE = inf
+            for i in range(len(self.centroids)):
+                ptsInCurrCluster = dataSet[nonzero(clusterAssment[:, 0].A == i)[0],
+                                   :]  # get the data points currently in cluster i
+                # print(ptsInCurrCluster)
+                # fixed = copy.deepcopy(self.fixed_centroids)
+                print(self.fixed_centroids)
+                model = KMeans(k=2,
+                               fixed_centroids=self.fixed_centroids,
+                               distMeas=self.distMeas,
+                               itertimes=self.itertimes)
+                centroidMat, splitClustAss = model.fit(dataSet=ptsInCurrCluster)
+                sseSplit = sum(splitClustAss[:, 1])  # compare the SSE to the currrent minimum
+                sseNotSplit = sum(clusterAssment[nonzero(clusterAssment[:, 0].A != i)[0], 1])
+                print("sseSplit, and notSplit: ", sseSplit, sseNotSplit)
+                if (sseSplit + sseNotSplit) < lowestSSE:
+                    bestCentToSplit = i
+                    bestNewCents = centroidMat
+                    bestClustAss = splitClustAss.copy()
+                    lowestSSE = sseSplit + sseNotSplit
+            bestClustAss[nonzero(bestClustAss[:, 0].A == 1)[0], 0] = len(self.centroids)  # change 1 to 3,4, or whatever
+            bestClustAss[nonzero(bestClustAss[:, 0].A == 0)[0], 0] = bestCentToSplit
+            print('the bestCentToSplit is: ', bestCentToSplit)
+            print('the len of bestClustAss is: ', len(bestClustAss))
+            self.centroids[bestCentToSplit] = bestNewCents[0, :].tolist()[0]  # replace a centroid with two best centroids
+            self.centroids.append(bestNewCents[1, :].tolist()[0])
+            clusterAssment[nonzero(clusterAssment[:, 0].A == bestCentToSplit)[0],
+            :] = bestClustAss  # reassign new clusters, and SSE
+        return mat(self.centroids), clusterAssment
 
 
 import urllib
@@ -199,3 +220,23 @@ def clusterClubs(numClust=5):
                     s=90)
     ax1.scatter(myCentroids[:, 0].flatten().A[0], myCentroids[:, 1].flatten().A[0], marker='+', s=300)
     plt.show()
+
+
+def PickNewPoint(centroids):
+    get_2 = centroids[-2:, :]
+    JpointLocations = getJpointLocation()
+    # 对于新产生的两个点，选取最靠近他们的点为新增补给点
+    names = []
+    for Kmean_center in get_2:
+        min_dist = inf
+        dist = inf
+        for JpointName in JpointLocations.keys():
+            dist = distEclud(JpointLocations[JpointName],Kmean_center)
+            if dist < min_dist:
+                # 记录下标
+                min_dist = dist
+                min_name = JpointName
+        names.append(min_name)
+    return names
+
+

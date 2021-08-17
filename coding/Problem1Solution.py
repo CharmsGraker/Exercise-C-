@@ -5,7 +5,6 @@ import gurobipy
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from coding.Preprocess.config import data_save_dir
 
 from coding.Preprocess.costing import A_graph, B_graph
 
@@ -13,14 +12,9 @@ from coding.Preprocess.costing import A_graph, B_graph
 # 导入文件
 from coding.draw_utils import PlotGraph, PlotPath
 
-readData = lambda path: pd.read_csv(path, index_col=0)
-joinPath = lambda filename: os.path.join(data_save_dir, 'table', filename)
+from utils import GraphAndCostLoader
 
-path = joinPath('Acar_costMatrix.csv')
-A_cost_matrix = readData(path)
-path = joinPath('Bcar_costMatrix.csv')
-
-B_cost_matrix = readData(path)
+A_graph, B_graph, A_cost_matrix, B_cost_matrix = GraphAndCostLoader()
 
 # 初始化映射表
 cost_matrix = {

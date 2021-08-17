@@ -58,6 +58,16 @@ def getLocation():
     return point_location
 
 
+def getJpointLocation():
+    point_locationDataFrame = getLocation()
+    point_location = point_locationDataFrame.values
+    JpointLocation = {}
+    for idx, point in enumerate(point_locationDataFrame.index):
+        if point[0] == 'J':
+            JpointLocation[point] = point_location[idx, :]
+    return JpointLocation
+
+
 def annotationMain():
     """
 
@@ -90,6 +100,20 @@ def annotationMain():
     save_path_branch = os.path.join(save_dir, filename)
 
     link_matrix_branch.to_csv(save_path_branch)
+
+
+def GraphAndCostLoader():
+    from coding.Preprocess.costing import A_graph, B_graph
+
+    readData = lambda path: pd.read_csv(path, index_col=0)
+    joinPath = lambda filename: os.path.join(data_save_dir, 'table', filename)
+
+    path = joinPath('Acar_costMatrix.csv')
+    A_cost_matrix = readData(path)
+    path = joinPath('Bcar_costMatrix.csv')
+
+    B_cost_matrix = readData(path)
+    return A_graph, B_graph, A_cost_matrix, B_cost_matrix
 
 
 
